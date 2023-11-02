@@ -8,4 +8,4 @@ this repository is for the ego planner swarm simulation or CMPCC with PX4, in ga
 
 * repo based on: https://space.bilibili.com/447348870
 
-* CMPCC: https://github.com/ZJU-FAST-Lab/CMPCC.git
+* Corridor minimum-snap PRM planning: https://github.com/edmundwsy/RO47005-PDM-Final.git
