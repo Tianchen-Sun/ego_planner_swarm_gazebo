@@ -5,5 +5,5 @@ roslaunch ego_planner single_run_in_gazebo_prm_corridor.launch & sleep 5;
 rosrun mavros mavparam set COM_RCL_EXCEPT 4
 roslaunch px4ctrl run_node.launch & sleep 5;
 # rosrun rqt_reconfigure rqt_reconfigure & sleep 5;
-roslaunch ego_planner rviz.launch
+roslaunch ego_planner rviz_corridor.launch
 
