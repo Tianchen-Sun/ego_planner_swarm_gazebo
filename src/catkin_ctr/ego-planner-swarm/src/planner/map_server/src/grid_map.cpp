@@ -21,9 +21,9 @@ void GridMap::initGridMap(ros::NodeHandle& nh) {
   // nh.param("/grid_map/y_size", _mp_size_y, -1.0f);
   // nh.param("/grid_map/z_size", _mp_size_z, -1.0f);
   // /* to debug
-  nh.param("/grid_map/x_size", _mp_size_x, 26.0f);
-  nh.param("/grid_map/y_size", _mp_size_y, 20.0f);
-  nh.param("/grid_map/z_size", _mp_size_z, 3.0f);
+  nh.param("/grid_map/x_size", _mp_size_x, 50.0f); //26.0f
+  nh.param("/grid_map/y_size", _mp_size_y, 25.0f); //20.0f
+  nh.param("/grid_map/z_size", _mp_size_z, 3.0f);  //3.0f
 
   ROS_INFO("Initializing GridMap Parameters:");
   ROS_INFO_STREAM("resolution:\t" << _mp_resolution);

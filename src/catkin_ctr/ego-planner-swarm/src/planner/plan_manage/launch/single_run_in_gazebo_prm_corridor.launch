@@ -63,16 +63,17 @@
         <arg name="point4_z" value="1.0" />
     </include>
     <!-- trajectory server -->
-    <!-- <node pkg="ego_planner" name="drone_$(arg drone_id)_traj_server" type="traj_server" output="screen">
+    <node pkg="ego_planner" name="drone_$(arg drone_id)_traj_server" type="traj_server" output="screen">
         <remap from="position_cmd" to="$(arg cmd_topic)"/>
         <remap from="~planning/bspline" to="planning/bspline"/>
         <param name="traj_server/time_forward" value="1.0" type="double"/>
-    </node> -->
+    </node>
     
     <arg name="number_sample" value="1000"/>
+
     <node name="prm_planner" pkg="planner" type="planner_node" output="screen" >
       <param name="number_sample" value="$(arg number_sample)" />
-      <remap from="~cloud_in" to="/drone_$(arg drone_id)_ego_planner_node/grid_map/occupancy_inflate" />
+      <remap from="~cloud_in" to="/drone_$(arg drone_id)_ego_planner_node/grid_map" />
       <remap from="~odometry" to="$(arg odom_topic)" />
       <!-- <remap from="/grid_map/x_size" to="/random_forest/map/x_size" />
       <remap from="/grid_map/y_size" to="/random_forest/map/y_size" />
@@ -83,19 +84,25 @@
       <param name="z_size" value="$(arg map_size_z)"/>
       <param name="resolution" value="0.05" />
       <param name="obstacle_inflation" value="0.2" />
-    </node>
+    </node> 
 
   
-    <!-- <node pkg="traj_opt" type="traj_opt_node" name="traj_opt_node" output="screen">
+    <node pkg="traj_opt" type="traj_opt_node" name="traj_opt_node" output="screen">
       <param name="speed" value="1.0"/>
       <remap from="~waypoint" to="/prm_planner/raw_path"/>
       <remap from="~map" to="/drone_$(arg drone_id)_ego_planner_node/grid_map/occupancy_inflate" />
-      <remap from="/grid_map/x_size" to="$(arg map_size_x)" />
+      <!-- <remap from="/grid_map/x_size" to="$(arg map_size_x)" />
       <remap from="/grid_map/y_size" to="$(arg map_size_y)" />
-      <remap from="/grid_map/z_size" to="$(arg map_size_z)" />
+      <remap from="/grid_map/z_size" to="$(arg map_size_z)" /> -->
+
+    
       <remap from="~position_command" to="/position_cmd"/>
       <remap from="~odom" to="$(arg odom_topic)"/>
-    </node> -->
+
+      <!-- <param name="/grid_map/x_size"   value="$(arg map_size_x)" /> 
+      <param name="/grid_map/y_size"   value="$(arg map_size_y)" /> 
+      <param name="/grid_map/z_size"   value="$(arg map_size_z)" />  -->
+    </node>
 
     <node pkg="odom_visualization" name="drone_$(arg drone_id)_odom_visualization" type="odom_visualization" output="screen">
         <remap from="~odom" to="$(arg odom_topic)"/>
