@@ -7,3 +7,5 @@ roslaunch px4ctrl run_node.launch & sleep 5;
 # rosrun rqt_reconfigure rqt_reconfigure & sleep 5;
 roslaunch ego_planner rviz_corridor.launch
 
+# roslaunch yolov7_ros yolov7.launch
+# rosrun dispimg img_disp.py
