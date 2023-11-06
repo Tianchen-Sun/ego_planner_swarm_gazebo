@@ -739,7 +739,7 @@ void PRM::callback(const geometry_msgs::PoseStamped::ConstPtr& msg) {
     ROS_INFO("position received: %f, %f, %f",current_pos_(0),current_pos_(1),current_pos_(2));
 
     //Add goal as a node into the graph
-    Vertice end(msg->pose.position.x,msg->pose.position.y,msg->pose.position.z);
+    Vertice end(msg->pose.position.x,msg->pose.position.y,current_pos_(2));
     //If target is valid, run graph search
     if(collision_check(end)){
 

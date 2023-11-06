@@ -21,7 +21,7 @@
     <param name="x_size" value="$(arg map_size_x)"/>
     <param name="y_size" value="$(arg map_size_y)"/>
     <param name="z_size" value="$(arg map_size_z)"/>
-    <remap from="~cloud_in" to="/grid_map/occupancy_inflate" />
+    <remap from="~cloud_in" to="/drone_$(arg drone_id)_ego_planner_node/grid_map/occupancy" />
     <remap from="~odometry" to="$(arg odom_topic)" />
     <param name="resolution" value="0.05" />
     <param name="obstacle_inflation" value="0.2" />

@@ -30,10 +30,14 @@
         <!-- don't set camera pose and depth, if you already set this one! -->
         <arg name="cloud_topic" value="null"/>
         <!-- intrinsic params of the depth camera -->
-        <arg name="cx" value="320.5"/>
+        <!-- <arg name="cx" value="320.5"/>
         <arg name="cy" value="240.5"/>
         <arg name="fx" value="554.254691191187"/>
-        <arg name="fy" value="554.254691191187"/>
+        <arg name="fy" value="554.254691191187"/> -->
+        <arg name="cx" value="240.0"/>
+        <arg name="cy" value="376.0"/>
+        <arg name="fx" value="376.0"/>
+        <arg name="fy" value="376.0"/>
         <!-- maximum velocity and acceleration the drone will reach -->
         <arg name="max_vel" value="1.0" />
         <arg name="max_acc" value="3.0" />
@@ -73,7 +77,7 @@
 
     <node name="prm_planner" pkg="planner" type="planner_node" output="screen" >
       <param name="number_sample" value="$(arg number_sample)" />
-      <remap from="~cloud_in" to="/drone_$(arg drone_id)_ego_planner_node/grid_map" />
+      <remap from="~cloud_in" to="/drone_$(arg drone_id)_ego_planner_node/grid_map/occupancy" />
       <remap from="~odometry" to="$(arg odom_topic)" />
       <!-- <remap from="/grid_map/x_size" to="/random_forest/map/x_size" />
       <remap from="/grid_map/y_size" to="/random_forest/map/y_size" />
