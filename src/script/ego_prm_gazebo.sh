@@ -3,7 +3,7 @@
 roslaunch ego_planner single_run_in_gazebo_prm_corridor.launch & sleep 5;
 # unlock
 rosrun mavros mavparam set COM_RCL_EXCEPT 4
-roslaunch px4ctrl run_node.launch & sleep 5;
+roslaunch px4ctrl run_prm_node.launch & sleep 5;
 roslaunch ego_planner rviz_corridor.launch
 
 # rosrun rqt_reconfigure rqt_reconfigure & sleep 1;
