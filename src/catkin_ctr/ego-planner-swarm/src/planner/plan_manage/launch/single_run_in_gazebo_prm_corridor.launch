@@ -86,7 +86,7 @@
       <param name="x_size" value="$(arg map_size_x)"/>
       <param name="y_size" value="$(arg map_size_y)"/>
       <param name="z_size" value="$(arg map_size_z)"/>
-      <param name="resolution" value="0.05" />
+      <param name="resolution" value="0.5" /><!--0.05-->
       <param name="obstacle_inflation" value="0.2" />
     </node> 
 
