@@ -30,10 +30,14 @@
         <!-- don't set camera pose and depth, if you already set this one! -->
         <arg name="cloud_topic" value="null"/>
         <!-- intrinsic params of the depth camera -->
-        <arg name="cx" value="320.5"/>
+        <!-- <arg name="cx" value="320.5"/>
         <arg name="cy" value="240.5"/>
         <arg name="fx" value="554.254691191187"/>
-        <arg name="fy" value="554.254691191187"/>
+        <arg name="fy" value="554.254691191187"/> -->
+        <arg name="cx" value="240.0"/>
+        <arg name="cy" value="376.0"/>
+        <arg name="fx" value="376.0"/>
+        <arg name="fy" value="376.0"/>
         <!-- maximum velocity and acceleration the drone will reach -->
         <arg name="max_vel" value="1.0" />
         <arg name="max_acc" value="3.0" />

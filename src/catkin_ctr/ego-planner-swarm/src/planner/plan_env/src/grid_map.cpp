@@ -142,7 +142,7 @@ void GridMap::initMap(ros::NodeHandle &nh)
 
   map_pub_ = node_.advertise<sensor_msgs::PointCloud2>("grid_map/occupancy", 10);
   map_inf_pub_ = node_.advertise<sensor_msgs::PointCloud2>("grid_map/occupancy_inflate", 10);
-
+  pointcloud_pub_=node_.advertise<sensor_msgs::PointCloud2>("grid_map/pointcloud", 10);
   md_.occ_need_update_ = false;
   md_.local_updated_ = false;
   md_.has_first_depth_ = false;
@@ -909,6 +909,7 @@ void GridMap::publishMap()
 
   pcl::toROSMsg(cloud, cloud_msg);
   map_pub_.publish(cloud_msg);
+
 }
 
 void GridMap::publishMapInflate(bool all_info)
