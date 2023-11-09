@@ -9,6 +9,7 @@
     <arg name="target_x" default="12"/>
     <arg name="target_y" default="1"/>
     <arg name="target_z" default="1.5"/>
+    <arg name="simple_goal_z" value="  2.0"/>
     <arg name="odom_topic" value="mavros/local_position/odom"/>
     <arg name="depth_topic" value="/iris_D435i/realsense/depth_camera/depth/image_raw"/>
     <arg name="cmd_topic" value="planning/pos_cmd"/>
@@ -82,7 +83,7 @@
       <!-- <remap from="/grid_map/x_size" to="/random_forest/map/x_size" />
       <remap from="/grid_map/y_size" to="/random_forest/map/y_size" />
       <remap from="/grid_map/z_size" to="/random_forest/map/z_size" /> -->
-      
+      <param name="simple_goal_z" value="$(arg simple_goal_z)"/>
       <param name="x_size" value="$(arg map_size_x)"/>
       <param name="y_size" value="$(arg map_size_y)"/>
       <param name="z_size" value="$(arg map_size_z)"/>
