@@ -35,7 +35,8 @@ CorridorMiniSnap mini_snap_;
 Trajectory traj_;
 GridMap::Ptr map_ptr_;
 vec_Vec3f observations;
-vec_Vec3f waypointsf;
+
+
 pcl::PointCloud<pcl::PointXYZ> cloud;
 
 static int traj_id_ = 0;
@@ -379,109 +380,110 @@ void waypointCallback(const geometry_msgs::PoseArray& wp) {
  * 1 Hz
  * 
  */
-void trajCallback(const ros::TimerEvent& te) {
-  /**
-   * @brief generate flight corridors
-   * Based on open-source codes from Sikang Liu
-   */
-  std::vector<Eigen::Matrix<double, 6, -1>> corridor;
-  EllipsoidDecomp3D decomp_util;
-  observations = getSubPointClouds(cloud, waypointsf);
-  decomp_util.set_obs(observations);
-  decomp_util.set_local_bbox(Vec3f(1, 2, 1));
-  decomp_util.dilate(waypointsf);
-  corridor = polyhTypeConverter(decomp_util.get_polyhedrons());
-  /* clean buffer */
-  ROS_INFO_STREAM("corridor size: " << corridor.size());
-  visualizeCorridors(corridor);
+// void trajCallback(const ros::TimerEvent& te) {
+//   /**
+//    * @brief generate flight corridors
+//    * Based on open-source codes from Sikang Liu
+//    */
+//   ros::Time now = ros::Time::now();
+//   std::vector<Eigen::Matrix<double, 6, -1>> corridor;
+//   EllipsoidDecomp3D decomp_util;
+//   observations = getSubPointClouds(cloud, waypointsf);
+//   decomp_util.set_obs(observations);
+//   decomp_util.set_local_bbox(Vec3f(1, 2, 1));
+//   decomp_util.dilate(waypointsf);
+//   corridor = polyhTypeConverter(decomp_util.get_polyhedrons());
+//   /* clean buffer */
+//   ROS_INFO_STREAM("corridor size: " << corridor.size());
+//   visualizeCorridors(corridor);
 
-  // get total time  // trapezoidal speed curve
-  time_allocations[0] = 2 * time_allocations[0];
-  time_allocations.back() *= 2;
-  double T = 0;
-  for (auto it = time_allocations.begin(); it != time_allocations.end(); ++it) {
-    T += (*it);
-  }
-  std::cout << "Time Size: " << time_allocations.size() << std::endl;
-  std::cout << "Time: " << T << std::endl;
+//   // // get total time  // trapezoidal speed curve
+//   // time_allocations[0] = 2 * time_allocations[0];
+//   // time_allocations.back() *= 2;
+//   // double T = 0;
+//   // for (auto it = time_allocations.begin(); it != time_allocations.end(); ++it) {
+//   //   T += (*it);
+//   // }
+//   // std::cout << "Time Size: " << time_allocations.size() << std::endl;
+//   // std::cout << "Time: " << T << std::endl;
 
-  // initialize optimizer
-  std::vector<Eigen::Vector3d> inter_waypoints(waypoints.begin() + 1,
-                                               waypoints.end() - 1);
+//   // // initialize optimizer
+//   // std::vector<Eigen::Vector3d> inter_waypoints(waypoints.begin() + 1,
+//   //                                              waypoints.end() - 1);
 
-  // for (auto it = inter_waypoints.begin(); it != inter_waypoints.end(); ++it)
-  // {
-  //   std::cout << "pos:\t" << it->transpose() << std::endl;
-  // }
-  // std::cout << "Wpts: " << inter_waypoints.size() << std::endl;
-  // mini_snap_.reset(init_state, finl_state, inter_waypoints,
-  // time_allocations);
-  std::chrono::high_resolution_clock::time_point tic =
-      std::chrono::high_resolution_clock::now();
+//   // // for (auto it = inter_waypoints.begin(); it != inter_waypoints.end(); ++it)
+//   // // {
+//   // //   std::cout << "pos:\t" << it->transpose() << std::endl;
+//   // // }
+//   // // std::cout << "Wpts: " << inter_waypoints.size() << std::endl;
+//   // // mini_snap_.reset(init_state, finl_state, inter_waypoints,
+//   // // time_allocations);
+//   // std::chrono::high_resolution_clock::time_point tic =
+//   //     std::chrono::high_resolution_clock::now();
 
-  mini_snap_.reset(init_state, finl_state, time_allocations, corridor);
-  mini_snap_.optimize();
-  mini_snap_.getTrajectory(&traj_);
-  int I = 10;  // max iterations
-  int i = 0;
-  while (!mini_snap_.isCorridorSatisfied(traj_) && i++ < I) {
-    std::cout << "out of corridor:\t" << i << std::endl;
-    mini_snap_.reOptimize();
-    mini_snap_.getTrajectory(&traj_);
-  }
-  // apply minimum snap optimization
+//   // mini_snap_.reset(init_state, finl_state, time_allocations, corridor);
+//   // mini_snap_.optimize();
+//   // mini_snap_.getTrajectory(&traj_);
+//   // int I = 10;  // max iterations
+//   // int i = 0;
+//   // while (!mini_snap_.isCorridorSatisfied(traj_) && i++ < I) {
+//   //   std::cout << "out of corridor:\t" << i << std::endl;
+//   //   mini_snap_.reOptimize();
+//   //   mini_snap_.getTrajectory(&traj_);
+//   // }
+//   // // apply minimum snap optimization
 
-  std::chrono::high_resolution_clock::time_point toc =
-      std::chrono::high_resolution_clock::now();
-  double compTime =
-      std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() *
-      1.0e-3;
-  std::cout << "\033[35m EVALUATIONS" << std::endl;
-  std::cout << " number of pieces: " << time_allocations.size() << std::endl;
-  std::cout << "[TrajOpt] Iterations: " << i << std::endl;
-  std::cout << "[TrajOpt] Computation time: "
-            << 1.0e-3 * std::chrono::duration_cast<std::chrono::microseconds>(
-                            toc - tic)
-                            .count()
-            << "ms" << std::endl;
-  std::cout << "[TrajOpt] Final cost: " << mini_snap_.getMinimumCost()
-            << std::endl;
-  std::cout << "[TrajOpt] Max velocity: " << traj_.getMaxVelRate() << std::endl;
-  std::cout << "[TrajOpt] Max acclerate: " << traj_.getMaxAccRate()
-            << std::endl;
-  std::cout << "[TrajOpt] Total time: " << traj_.getDuration() << std::endl;
-  std::cout << " \033[0m" << std::endl;
+//   // std::chrono::high_resolution_clock::time_point toc =
+//   //     std::chrono::high_resolution_clock::now();
+//   // double compTime =
+//   //     std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() *
+//   //     1.0e-3;
+//   // std::cout << "\033[35m EVALUATIONS" << std::endl;
+//   // std::cout << " number of pieces: " << time_allocations.size() << std::endl;
+//   // std::cout << "[TrajOpt] Iterations: " << i << std::endl;
+//   // std::cout << "[TrajOpt] Computation time: "
+//   //           << 1.0e-3 * std::chrono::duration_cast<std::chrono::microseconds>(
+//   //                           toc - tic)
+//   //                           .count()
+//   //           << "ms" << std::endl;
+//   // std::cout << "[TrajOpt] Final cost: " << mini_snap_.getMinimumCost()
+//   //           << std::endl;
+//   // std::cout << "[TrajOpt] Max velocity: " << traj_.getMaxVelRate() << std::endl;
+//   // std::cout << "[TrajOpt] Max acclerate: " << traj_.getMaxAccRate()
+//   //           << std::endl;
+//   // std::cout << "[TrajOpt] Total time: " << traj_.getDuration() << std::endl;
+//   // std::cout << " \033[0m" << std::endl;
 
-  traj_id_++;
+//   // traj_id_++;
 
-  // initialize visualization
-  nav_msgs::Path path;
-  double dt = 0.05;
-  traj_start_ = ros::Time::now();              // start timestamp
-  traj_end_ = traj_start_ + ros::Duration(T);  // end timestamp
+//   // // initialize visualization
+//   // nav_msgs::Path path;
+//   // double dt = 0.05;
+//   // traj_start_ = ros::Time::now();              // start timestamp
+//   // traj_end_ = traj_start_ + ros::Duration(T);  // end timestamp
 
-  path.header.frame_id = "world";
-  path.header.stamp = traj_start_;
+//   // path.header.frame_id = "world";
+//   // path.header.stamp = traj_start_;
 
-  for (double t = 0.0; t < T; t += dt) {
-    geometry_msgs::PoseStamped point;
-    point.header.frame_id = "world";
-    point.header.stamp = traj_start_ + ros::Duration(t);
-    Eigen::Vector3d pos = traj_.getPos(t);
-    point.pose.position.x = pos(0);
-    point.pose.position.y = pos(1);
-    point.pose.position.z = pos(2);
-    point.pose.orientation.w = 1;
-    point.pose.orientation.x = 0;
-    point.pose.orientation.y = 0;
-    point.pose.orientation.z = 0;
-    path.poses.push_back(point);
-  }
-  trajectory_pub.publish(path);
+//   // for (double t = 0.0; t < T; t += dt) {
+//   //   geometry_msgs::PoseStamped point;
+//   //   point.header.frame_id = "world";
+//   //   point.header.stamp = traj_start_ + ros::Duration(t);
+//   //   Eigen::Vector3d pos = traj_.getPos(t);
+//   //   point.pose.position.x = pos(0);
+//   //   point.pose.position.y = pos(1);
+//   //   point.pose.position.z = pos(2);
+//   //   point.pose.orientation.w = 1;
+//   //   point.pose.orientation.x = 0;
+//   //   point.pose.orientation.y = 0;
+//   //   point.pose.orientation.z = 0;
+//   //   path.poses.push_back(point);
+//   // }
+//   // trajectory_pub.publish(path);
 
-  visualizeTraj(traj_, 5.0);
-  corridor.clear();
-}
+//   // visualizeTraj(traj_, 5.0);
+//   corridor.clear();
+// }
 /**
  * @brief callback, calls every 10ms, send commands to controller
  *
@@ -566,11 +568,15 @@ int main(int argc, char** argv) {
   sfc_pub = nh.advertise<decomp_ros_msgs::PolyhedronArray>("safe_corridor", 1);
   color_vel_pub =
       nh.advertise<visualization_msgs::Marker>("colored_trajectory", 1);
+  
+  // publish traj every 1s
+  // ros::Timer traj_timer=nh.createTimer(ros::Duration(1), trajCallback);
 
   // publish quadrotor commands every 10ms
   ros::Timer command_timer =
       nh.createTimer(ros::Duration(0.01), commandCallback);
-
+  
+  
   ros::spin();
   return 0;
 }
