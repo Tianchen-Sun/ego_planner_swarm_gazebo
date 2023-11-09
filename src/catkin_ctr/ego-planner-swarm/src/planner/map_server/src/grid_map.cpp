@@ -423,11 +423,11 @@ float GridMap::getResolution() { return _mp_resolution; }
 void GridMap::initFromPointCloud(const sensor_msgs::PointCloud2ConstPtr &cld) {
   pcl::PointCloud<pcl::PointXYZ> cloud;
   pcl::fromROSMsg(*cld, cloud);
-  ROS_INFO("Init Map from published occupancy maps");
+  // ROS_INFO("Init Map from published occupancy maps");
 
   for (auto it = cloud.begin(); it != cloud.end(); ++it) {
     Eigen::Vector3f p = it->getVector3fMap();
     occupancy_buffer_[posToAddress(p)] = true;
   }
-  ROS_INFO("Initialization Finished");
+  // ROS_INFO("Initialization Finished");
 }
