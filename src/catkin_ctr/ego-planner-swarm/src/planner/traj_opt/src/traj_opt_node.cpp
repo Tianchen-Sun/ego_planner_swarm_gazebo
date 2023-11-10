@@ -34,10 +34,12 @@ CorridorMiniSnap mini_snap_;
 // MiniSnap mini_snap_;
 Trajectory traj_;
 GridMap::Ptr map_ptr_;
-vec_Vec3f observations;
+// vec_Vec3f observations;
 
 
-pcl::PointCloud<pcl::PointXYZ> cloud;
+ pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>);
+
+// pcl::PointCloud<pcl::PointXYZ> cloud;
 
 static int traj_id_ = 0;
 ros::Subscriber waypoint_sub;
@@ -54,9 +56,7 @@ ros::Time traj_end_;
 double speed;
 
 // transfer waypoints and states, from waypointcallback to trajcallback
-vec_Vec3f waypointsf;
-Eigen::Matrix3d init_state;
-Eigen::Matrix3d finl_state;
+vec_Vec3f waypointsf_tranfer;
 
 vec_Vec3f cloud_to_vec(const pcl::PointCloud<pcl::PointXYZ> &cloud) {
   vec_Vec3f pts;
@@ -225,7 +225,7 @@ std::vector<Eigen::Matrix<double, 6, -1>> polyhTypeConverter(
  */
 void waypointCallback(const geometry_msgs::PoseArray& wp) {
   std::vector<Eigen::Vector3d> waypoints;
-  
+  vec_Vec3f waypointsf;
   std::vector<double> time_allocations;
   waypoints.clear();
 
@@ -250,6 +250,9 @@ void waypointCallback(const geometry_msgs::PoseArray& wp) {
     waypoints.push_back(pt);
     waypointsf.push_back(ptf);
   }
+ //assign to the global variable
+ waypointsf_tranfer.clear();
+ waypointsf_tranfer = waypointsf;
 
   /* visualize waypoints */
   nav_msgs::Path wps_list;
@@ -271,6 +274,8 @@ void waypointCallback(const geometry_msgs::PoseArray& wp) {
   Eigen::Vector3d init_pos = waypoints[0];
   Eigen::Vector3d finl_pos = waypoints.back();
   
+  Eigen::Matrix3d init_state;
+  Eigen::Matrix3d finl_state;
   init_state << init_pos, zero, zero;
   finl_state << finl_pos, zero, zero;
   std::cout << "init\t" << init_pos.transpose() << std::endl;
@@ -282,7 +287,7 @@ void waypointCallback(const geometry_msgs::PoseArray& wp) {
    */
   std::vector<Eigen::Matrix<double, 6, -1>> corridor;
   EllipsoidDecomp3D decomp_util;
-  observations = getSubPointClouds(cloud, waypointsf);
+  vec_Vec3f observations = getSubPointClouds(*cloud_ptr, waypointsf);
   decomp_util.set_obs(observations);
   decomp_util.set_local_bbox(Vec3f(1, 2, 1));
   decomp_util.dilate(waypointsf);
@@ -377,119 +382,44 @@ void waypointCallback(const geometry_msgs::PoseArray& wp) {
 
   visualizeTraj(traj_, 5.0);
   corridor.clear();
+  
 }
 /**
  * @brief trajectory and corridor timer callback
  * 1 Hz
  * 
  */
-void trajCallback(const ros::TimerEvent& te) {
-  /**
-   * @brief generate flight corridors
-   * Based on open-source codes from Sikang Liu
-   */
-  ros::Time now = ros::Time::now();
-  std::vector<Eigen::Matrix<double, 6, -1>> corridor;
-  EllipsoidDecomp3D decomp_util;
-  observations = getSubPointClouds(cloud, waypointsf);
-  ROS_INFO("[CORRIDOR] corridor obs can be updated when new map comes");
-  decomp_util.set_obs(observations);
-  decomp_util.set_local_bbox(Vec3f(1, 2, 1));
-  decomp_util.dilate(waypointsf);
+// void trajCallback(const ros::TimerEvent& te) {
+//   /**
+//    * @brief generate flight corridors
+//    * Based on open-source codes from Sikang Liu
+//    */
+//   ros::Time now = ros::Time::now();
+//   std::vector<Eigen::Matrix<double, 6, -1>> corridor;
 
-  corridor = polyhTypeConverter(decomp_util.get_polyhedrons());
-  /* clean buffer */
-  ROS_INFO_STREAM("corridor size: " << corridor.size());
-  visualizeCorridors(corridor);
-  corridor.clear();
+//   EllipsoidDecomp3D decomp_util;
+//   int n = waypointsf_tranfer.size();
+//   vec_Vec3f::const_iterator first = waypointsf_tranfer.begin();
+//   vec_Vec3f::const_iterator last = waypointsf_tranfer.begin() + 2;
+//   vec_Vec3f cutted_waypointsf(first, last);
 
-  // // get total time  // trapezoidal speed curve
-  // time_allocations[0] = 2 * time_allocations[0];
-  // time_allocations.back() *= 2;
-  // double T = 0;
-  // for (auto it = time_allocations.begin(); it != time_allocations.end(); ++it) {
-  //   T += (*it);
-  // }
-  // std::cout << "Time Size: " << time_allocations.size() << std::endl;
-  // std::cout << "Time: " << T << std::endl;
+//   vec_Vec3f observations = getSubPointClouds(*cloud_ptr,cutted_waypointsf);
+//   ROS_INFO("[CORRIDOR] corridor obs can be updated when new map comes");
+//   decomp_util.set_obs(observations);
+//   decomp_util.set_local_bbox(Vec3f(1, 2, 1));
+//   decomp_util.dilate(cutted_waypointsf);
 
-  // // initialize optimizer
-  // std::vector<Eigen::Vector3d> inter_waypoints(waypoints.begin() + 1,
-  //                                              waypoints.end() - 1);
+//   corridor = polyhTypeConverter(decomp_util.get_polyhedrons());
+//   // /* clean buffer */
+//   ROS_INFO_STREAM("corridor size: " << corridor.size());
 
-  // // for (auto it = inter_waypoints.begin(); it != inter_waypoints.end(); ++it)
-  // // {
-  // //   std::cout << "pos:\t" << it->transpose() << std::endl;
-  // // }
-  // // std::cout << "Wpts: " << inter_waypoints.size() << std::endl;
-  // // mini_snap_.reset(init_state, finl_state, inter_waypoints,
-  // // time_allocations);
-  // std::chrono::high_resolution_clock::time_point tic =
-  //     std::chrono::high_resolution_clock::now();
-
-  // mini_snap_.reset(init_state, finl_state, time_allocations, corridor);
-  // mini_snap_.optimize();
-  // mini_snap_.getTrajectory(&traj_);
-  // int I = 10;  // max iterations
-  // int i = 0;
-  // while (!mini_snap_.isCorridorSatisfied(traj_) && i++ < I) {
-  //   std::cout << "out of corridor:\t" << i << std::endl;
-  //   mini_snap_.reOptimize();
-  //   mini_snap_.getTrajectory(&traj_);
-  // }
-  // // apply minimum snap optimization
-
-  // std::chrono::high_resolution_clock::time_point toc =
-  //     std::chrono::high_resolution_clock::now();
-  // double compTime =
-  //     std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() *
-  //     1.0e-3;
-  // std::cout << "\033[35m EVALUATIONS" << std::endl;
-  // std::cout << " number of pieces: " << time_allocations.size() << std::endl;
-  // std::cout << "[TrajOpt] Iterations: " << i << std::endl;
-  // std::cout << "[TrajOpt] Computation time: "
-  //           << 1.0e-3 * std::chrono::duration_cast<std::chrono::microseconds>(
-  //                           toc - tic)
-  //                           .count()
-  //           << "ms" << std::endl;
-  // std::cout << "[TrajOpt] Final cost: " << mini_snap_.getMinimumCost()
-  //           << std::endl;
-  // std::cout << "[TrajOpt] Max velocity: " << traj_.getMaxVelRate() << std::endl;
-  // std::cout << "[TrajOpt] Max acclerate: " << traj_.getMaxAccRate()
-  //           << std::endl;
-  // std::cout << "[TrajOpt] Total time: " << traj_.getDuration() << std::endl;
-  // std::cout << " \033[0m" << std::endl;
-
-  // traj_id_++;
-
-  // // initialize visualization
-  // nav_msgs::Path path;
-  // double dt = 0.05;
-  // traj_start_ = ros::Time::now();              // start timestamp
-  // traj_end_ = traj_start_ + ros::Duration(T);  // end timestamp
-
-  // path.header.frame_id = "world";
-  // path.header.stamp = traj_start_;
-
-  // for (double t = 0.0; t < T; t += dt) {
-  //   geometry_msgs::PoseStamped point;
-  //   point.header.frame_id = "world";
-  //   point.header.stamp = traj_start_ + ros::Duration(t);
-  //   Eigen::Vector3d pos = traj_.getPos(t);
-  //   point.pose.position.x = pos(0);
-  //   point.pose.position.y = pos(1);
-  //   point.pose.position.z = pos(2);
-  //   point.pose.orientation.w = 1;
-  //   point.pose.orientation.x = 0;
-  //   point.pose.orientation.y = 0;
-  //   point.pose.orientation.z = 0;
-  //   path.poses.push_back(point);
-  // }
-  // trajectory_pub.publish(path);
-
-  // visualizeTraj(traj_, 5.0);
   
-}
+//   visualizeCorridors(corridor);
+//   // clear buffer
+//   corridor.clear();
+//   observations.clear();
+//   cutted_waypointsf.clear();
+// }
 /**
  * @brief callback, calls every 10ms, send commands to controller
  *
@@ -535,8 +465,9 @@ void commandCallback(const ros::TimerEvent& te) {
 void mapCallback(const sensor_msgs::PointCloud2ConstPtr& msg) {
   map_ptr_->initFromPointCloud(msg);
   // map_ptr_->publish();
-  // pcl::PointCloud<pcl::PointXYZ> cloud;
+  pcl::PointCloud<pcl::PointXYZ> cloud;
   pcl::fromROSMsg(*msg, cloud);
+  cloud_ptr=cloud.makeShared();
   // observations.resize(cloud.points.size());
   // int idx = 0;
   // for (auto it = cloud.begin(); it != cloud.end(); ++it) {
@@ -563,9 +494,11 @@ int main(int argc, char** argv) {
   map_ptr_->initGridMap(nh);
 
   ROS_INFO("Initialize node");
-  
-  waypoint_sub = nh.subscribe("waypoint", 100, waypointCallback);
   map_sub = nh.subscribe("map", 1, mapCallback);
+  waypoint_sub = nh.subscribe("waypoint", 100, waypointCallback);
+  
+  // publish traj every 1s
+  // ros::Timer traj_timer=nh.createTimer(ros::Duration(10), trajCallback);
 
   trajectory_pub = nh.advertise<nav_msgs::Path>("vis_waypoint_path", 1);
   waypoints_pub = nh.advertise<nav_msgs::Path>("vis_waypoint", 1);
@@ -576,9 +509,6 @@ int main(int argc, char** argv) {
   color_vel_pub =
       nh.advertise<visualization_msgs::Marker>("colored_trajectory", 1);
   
-  // publish traj every 1s
-  // ros::Timer traj_timer=nh.createTimer(ros::Duration(5), trajCallback);
-
   // publish quadrotor commands every 10ms
   ros::Timer command_timer =
       nh.createTimer(ros::Duration(0.01), commandCallback);

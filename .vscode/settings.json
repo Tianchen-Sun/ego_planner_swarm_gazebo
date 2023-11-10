@@ -45,6 +45,7 @@
                 "valarray": "cpp",
                 "core": "cpp",
                 "sparseqr": "cpp",
-                "tuple": "cpp"
+                "tuple": "cpp",
+                "type_traits": "cpp"
             }
 }

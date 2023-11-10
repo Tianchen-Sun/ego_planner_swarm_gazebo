@@ -66,7 +66,7 @@ void GridMap::initGridMap(ros::NodeHandle& nh) {
 void GridMap::pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& cld) {
   pcl::PointCloud<pcl::PointXYZ> cloud;
   pcl::fromROSMsg(*cld, cloud);
-  ROS_INFO("Received points clouds");
+  // ROS_INFO("Received points clouds");
 
   int cloud_size = cloud.points.size();
   ROS_ERROR_COND(cloud_size == 0, "No points in this point cloud.");
@@ -139,7 +139,7 @@ void GridMap::publish() {
       }
     }
   }
-  ROS_INFO_STREAM("publish size " << cloud.points.size());
+  // ROS_INFO_STREAM("publish size " << cloud.points.size());
   cloud.width = cloud.points.size();
   cloud.height = 1;
   cloud.is_dense = true;
@@ -147,7 +147,7 @@ void GridMap::publish() {
   sensor_msgs::PointCloud2 cloud_msgs;
   pcl::toROSMsg(cloud, cloud_msgs);
   map_pub_.publish(cloud_msgs);
-  ROS_INFO("GridMap publish complete");
+  // ROS_INFO("GridMap publish complete");
   is_map_built_ = true;
 }
 
