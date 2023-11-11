@@ -13,7 +13,7 @@
 
 void GridMap::initGridMap(ros::NodeHandle& nh) {
   /* read parameters */
-  nh.param("/grid_map/resolution", _mp_resolution, 0.05f);
+  nh.param("/grid_map/resolution", _mp_resolution, 0.15f);
   nh.param("/grid_map/frame_id", _mp_frame_id, std::string("world"));
   nh.param("/grid_map/obstacle_inflation", _mp_inflation, 0.2f);
 

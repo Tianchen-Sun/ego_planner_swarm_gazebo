@@ -94,7 +94,7 @@
       <param name="simple_goal_z" value="$(arg simple_goal_z)"/>
       <remap from="~cloud_in" to="/map_generator/global_cloud" />
       <remap from="~odometry" to="/drone_visual_slam/odom" />
-      <param name="resolution" value="0.05" />
+      <param name="resolution" value="0.15" />
       <param name="obstacle_inflation" value="0.2" />
   </node>
 
