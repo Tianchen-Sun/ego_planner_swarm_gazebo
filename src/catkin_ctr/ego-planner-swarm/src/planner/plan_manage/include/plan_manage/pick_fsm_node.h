@@ -1,0 +1,53 @@
+#ifndef _PICK_FSM_NODE_H_
+#define _PICK_FSM_NODE_H_
+#endif
+#include <stdlib.h>
+#include <Eigen/Eigen>
+#include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Odometry.h>
+#include <ros/ros.h>
+#include <cmath>
+
+class PickFsmNode
+{
+public: 
+    PickFsmNode(const ros::NodeHandle & nh);
+    void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
+    void detected_goal_callback(const geometry_msgs::PoseStamped::ConstPtr& msg);
+    void state_check_callback(const ros::TimerEvent& event);
+    void publish_selected_goal();
+    void set_hover_pose();
+   
+
+private:
+    // Node
+    ros::NodeHandle nh_;
+    ros::Subscriber odom_sub_;
+    ros::Subscriber detected_goal_sub_;
+    ros::Timer state_check_timer_;
+
+    // publish the current goal
+    ros::Publisher selected_goal_pub_;  
+
+    // drone state variables
+    Eigen::Vector3d odom_pos_; // odometry state
+    Eigen::Quaterniond odom_orient_; // odometry state
+    Eigen::Quaterniond detected_goal_orient_; // goal state
+    Eigen::Quaterniond hover_orient_; // hover state
+
+    nav_msgs::Odometry odom_pose_; // odometry pose
+    geometry_msgs::PoseStamped detected_goal_; // detected goal pose
+    geometry_msgs::PoseStamped selected_goal_; // selected goal pose
+
+    // fsm variables
+    bool goal_detected_; // whether the goal is detected
+    bool pick_finished_; // whether the pick is finished
+    bool at_hover_pose_; // whether the drone is at the hover pose
+
+    // set constant Hover position for apple detection
+    geometry_msgs::PoseStamped hover_pose_; 
+
+    // set constant
+    double goal_threshold_;
+    double orient_tolerance_ = 1e-6;
+};
