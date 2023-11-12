@@ -7,6 +7,10 @@
 #include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
 #include <cmath>
+#include "std_msgs/Bool.h"
+
+#include <iostream>
+#include <termios.h>
 
 class PickFsmNode
 {
@@ -17,17 +21,22 @@ public:
     void state_check_callback(const ros::TimerEvent& event);
     void publish_selected_goal();
     void set_hover_pose();
+    void ask_user_input();
+    static char getch();
    
 
 private:
-    // Node
+    // subscriber 
     ros::NodeHandle nh_;
     ros::Subscriber odom_sub_;
     ros::Subscriber detected_goal_sub_;
+
+    // timer 
     ros::Timer state_check_timer_;
 
     // publish the current goal
     ros::Publisher selected_goal_pub_;  
+    ros::Publisher yolo_signal_;
 
     // drone state variables
     Eigen::Vector3d odom_pos_; // odometry state
@@ -41,8 +50,9 @@ private:
 
     // fsm variables
     bool goal_detected_; // whether the goal is detected
-    bool pick_finished_; // whether the pick is finished
+    bool at_goal_pose_; // whether the pick is finished
     bool at_hover_pose_; // whether the drone is at the hover pose
+    bool set_yolo_state_; // whether the yolo is running
 
     // set constant Hover position for apple detection
     geometry_msgs::PoseStamped hover_pose_; 
