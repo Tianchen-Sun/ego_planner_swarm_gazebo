@@ -36,7 +36,7 @@ private:
 
     // publish the current goal
     ros::Publisher selected_goal_pub_;  
-    ros::Publisher yolo_signal_;
+    // ros::Publisher yolo_signal_;
 
     // drone state variables
     Eigen::Vector3d odom_pos_; // odometry state

@@ -17,7 +17,7 @@ PickFsmNode::PickFsmNode(const ros::NodeHandle & nh){
     detected_goal_sub_ = nh_.subscribe("/detected_goal_pos", 1, &PickFsmNode::detected_goal_callback, this);
     
     selected_goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/selected_goal", 1);
-    yolo_signal_ = nh_.advertise<std_msgs::Bool>("/yolo_signal", 1);
+    // yolo_signal_ = nh_.advertise<const std_msgs::Bool>("/yolo_signal", 1);
 
     state_check_timer_ = nh.createTimer(ros::Duration(1.0),&PickFsmNode::state_check_callback,this);
     
@@ -100,7 +100,7 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
         if (set_yolo_state_==true){
 
             // publish the yolo signal to start yolo
-            yolo_signal_.publish(set_yolo_state_);
+            // yolo_signal_.publish(set_yolo_state_);
             ROS_INFO("yolo_signal_ is published!");
 
             // subscribe the detected goal
@@ -109,7 +109,7 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
         }
         else{
             // publish the yolo signal to stop yolo
-            yolo_signal_.publish(set_yolo_state_);
+            // yolo_signal_.publish(set_yolo_state_);
             ROS_INFO("yolo is not running!");
         }
     }
