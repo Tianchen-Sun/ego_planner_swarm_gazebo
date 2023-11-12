@@ -56,6 +56,8 @@ private:
 
     bool at_hover_pose_; // whether the drone is at the hover pose
     bool set_yolo_state_; // whether the yolo is running
+    bool yolo_state_prev_; // whether the yolo state is published
+
     bool on_the_way_; // whether the drone is on the way to the goal pose
     std_msgs::Bool yolo_state_signal_; // yolo state signal
 

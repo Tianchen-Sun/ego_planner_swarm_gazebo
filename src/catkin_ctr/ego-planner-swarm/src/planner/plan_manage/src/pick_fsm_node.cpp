@@ -84,6 +84,12 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
 
     //--------- state change ---------
     // publish the current goal
+
+    /*
+    * at_hover_pose_ 
+    * on_the_way_
+    * at_goal_pose_
+    */
     if (goal_detected_==true && at_goal_pose_==false){
         publish_selected_goal();
         ROS_INFO("I have found an apple, I will go there! Selected goal published!");
@@ -136,7 +142,14 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     else{
         ROS_INFO("Waiting for goal detection!");
     }
-    publish_yolo_state_signal();
+    
+
+    // publish the yolo state signal, only if the yolo state is changed
+    if (set_yolo_state_!=yolo_state_prev_){
+        publish_yolo_state_signal();
+        yolo_state_prev_ = set_yolo_state_;
+    }
+
 }
 
 void PickFsmNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg){
