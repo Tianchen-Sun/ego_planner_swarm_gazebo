@@ -7,7 +7,7 @@ PickFsmNode::PickFsmNode(const ros::NodeHandle & nh){
 
     nh_.param<double>("goal_threshold", goal_threshold_,0.5f);
     nh_.param<double>("orient_tolerance", orient_tolerance_, 1e-1f);
-
+    on_the_way_ = false;
     ROS_INFO("goal_threshold = %f", goal_threshold_);
     ROS_INFO("orient_tolerance = %f", orient_tolerance_);
 
@@ -17,12 +17,11 @@ PickFsmNode::PickFsmNode(const ros::NodeHandle & nh){
     detected_goal_sub_ = nh_.subscribe("/detected_goal_pos", 1, &PickFsmNode::detected_goal_callback, this);
     
     selected_goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/selected_goal", 1);
-    // yolo_signal_ = nh_.advertise<const std_msgs::Bool>("/yolo_signal", 1);
+    yolo_signal_ = nh_.advertise<std_msgs::Bool>("/yolo_state_signal", 1);
 
     state_check_timer_ = nh.createTimer(ros::Duration(1.0),&PickFsmNode::state_check_callback,this);
     
     set_hover_pose();
-    
 
 } 
 
@@ -32,11 +31,12 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     // preset the state
     at_goal_pose_ = false;
     at_hover_pose_ = false;
-
+    
+    
 
     //TEMP
     detected_goal_.pose.position.z = 1.0;
-    bool at_goal_position = false;
+    
     // check whether the drone is at the goal pose
     if (sqrt(pow(odom_pos_(0)-detected_goal_.pose.position.x,2))+sqrt(pow(odom_pos_(1)-detected_goal_.pose.position.y,2))+sqrt(pow(odom_pos_(2)-detected_goal_.pose.position.z,2))<goal_threshold_)
     {   
@@ -46,18 +46,18 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
         else{
             at_goal_pose_ = false;
         }
-        at_goal_position = true;
+        at_goal_position_ = true;
     }
     else{
         at_goal_pose_ = false;
     }
-    ROS_INFO("detected_goal_.pose.position.x = %f", detected_goal_.pose.position.x);
-    ROS_INFO("detected_goal_.pose.position.y = %f", detected_goal_.pose.position.y);
-    ROS_INFO("detected_goal_.pose.position.z = %f", detected_goal_.pose.position.z);
-    ROS_INFO("odom_pos_(0) = %f", odom_pos_(0));
-    ROS_INFO("odom_pos_(1) = %f", odom_pos_(1));
-    ROS_INFO("odom_pos_(2) = %f", odom_pos_(2));
-    ROS_INFO("state_check_callback: at_goal_position = %d", at_goal_position);
+    // ROS_INFO("detected_goal_.pose.position.x = %f", detected_goal_.pose.position.x);
+    // ROS_INFO("detected_goal_.pose.position.y = %f", detected_goal_.pose.position.y);
+    // ROS_INFO("detected_goal_.pose.position.z = %f", detected_goal_.pose.position.z);
+    // ROS_INFO("odom_pos_(0) = %f", odom_pos_(0));
+    // ROS_INFO("odom_pos_(1) = %f", odom_pos_(1));
+    // ROS_INFO("odom_pos_(2) = %f", odom_pos_(2));
+    ROS_INFO("state_check_callback: at_goal_position_ = %d", at_goal_position_);
     ROS_INFO("state_check_callback: at_goal_pose = %d", at_goal_pose_);
 
 
@@ -71,7 +71,7 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
             at_hover_pose_ = true;
         }
         else{
-            at_hover_pose_ = false;
+            at_hover_pose_ = true;
         }
         at_hover_position =true;
     }
@@ -90,17 +90,24 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
 
          //Once goal detected, ignore the following detected goal, until current pick is finished
         detected_goal_sub_.shutdown();
+        
         ROS_INFO("detected_goal_sub_ is shutdown!");
+        goal_detected_ = false;
+    }
+    else if (on_the_way_==true){
+        ROS_INFO("I am on the way!");
+        // publish_selected_goal();
     }
     // return to the hover position
     else if (at_hover_pose_==true){
+        on_the_way_ = false;
         ROS_INFO("I am hovering!");
-        ask_user_input();
+        ask_user_input(); //will set set_yolo_state_
 
         if (set_yolo_state_==true){
 
             // publish the yolo signal to start yolo
-            // yolo_signal_.publish(set_yolo_state_);
+            // will publish the yolo signal in the end of the callback function
             ROS_INFO("yolo_signal_ is published!");
 
             // subscribe the detected goal
@@ -109,22 +116,27 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
         }
         else{
             // publish the yolo signal to stop yolo
-            // yolo_signal_.publish(set_yolo_state_);
+            // will publish the yolo signal in the end of the callback function
             ROS_INFO("yolo is not running!");
         }
     }
-    else if (at_goal_pose_==true){
-        ROS_INFO("Pick finished!, I will return to hover pose and listening targets!");
-        // selected_goal_pub_.publish(hover_pose_);
+    else if (at_goal_position_==true){
+        on_the_way_ = false;
+        ROS_INFO("Pick finished!, I will return to hover pose in 5s later and listening targets!");
+        
+        ros::Duration(5.0).sleep();
+        selected_goal_pub_.publish(hover_pose_);
+        
     }   
     else if (goal_detected_==false){
+        on_the_way_ = false;
         ROS_INFO("I have not found an apple, I will hover!");
        
     }
     else{
         ROS_INFO("Waiting for goal detection!");
     }
-    
+    publish_yolo_state_signal();
 }
 
 void PickFsmNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg){
@@ -147,7 +159,10 @@ void PickFsmNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg){
 
 void PickFsmNode::detected_goal_callback(const geometry_msgs::PoseStamped::ConstPtr& msg){
     goal_detected_ = true;
-    
+    ROS_INFO("deteced_goal_callback is activated! and goal_detected_ = %d", goal_detected_);
+    ROS_INFO("deteced_goal_callback: goal_msg->pose.position.x = %f", msg->pose.position.x);
+    ROS_INFO("deteced_goal_callback: goal_msg->pose.position.y = %f", msg->pose.position.y);
+    ROS_INFO("deteced_goal_callback: goal_msg-->pose.position.z = %f", msg->pose.position.z);
     detected_goal_.header = msg->header;
     detected_goal_.pose= msg->pose;
     
@@ -165,6 +180,7 @@ void PickFsmNode::publish_selected_goal(){
     // publish the selected goal
     selected_goal_.header=detected_goal_.header;
     selected_goal_.pose=detected_goal_.pose;
+    selected_goal_pub_.publish(selected_goal_);
 }
 
 void PickFsmNode::set_hover_pose(){
@@ -174,7 +190,7 @@ void PickFsmNode::set_hover_pose(){
     hover_pose_.header.frame_id = "world";
 
     //TEMP
-    hover_pose_.pose.position.x = -9.0;
+    hover_pose_.pose.position.x = 0.0;
     hover_pose_.pose.position.y = 0.0;
     hover_pose_.pose.position.z = 2.0;
     hover_pose_.pose.orientation.x = 0.0;
@@ -220,6 +236,10 @@ void PickFsmNode::ask_user_input(){
 
 }
 
+void PickFsmNode::publish_yolo_state_signal(){
+    yolo_state_signal_.data = set_yolo_state_;
+    yolo_signal_.publish( yolo_state_signal_);
+}
 
 int main(int argc, char **argv)
 {

@@ -22,6 +22,7 @@ public:
     void publish_selected_goal();
     void set_hover_pose();
     void ask_user_input();
+    void publish_yolo_state_signal();
     static char getch();
    
 
@@ -36,7 +37,7 @@ private:
 
     // publish the current goal
     ros::Publisher selected_goal_pub_;  
-    // ros::Publisher yolo_signal_;
+    ros::Publisher yolo_signal_;
 
     // drone state variables
     Eigen::Vector3d odom_pos_; // odometry state
@@ -51,8 +52,12 @@ private:
     // fsm variables
     bool goal_detected_; // whether the goal is detected
     bool at_goal_pose_; // whether the pick is finished
+    bool at_goal_position_; // whether the drone is at the goal position
+
     bool at_hover_pose_; // whether the drone is at the hover pose
     bool set_yolo_state_; // whether the yolo is running
+    bool on_the_way_; // whether the drone is on the way to the goal pose
+    std_msgs::Bool yolo_state_signal_; // yolo state signal
 
     // set constant Hover position for apple detection
     geometry_msgs::PoseStamped hover_pose_; 
