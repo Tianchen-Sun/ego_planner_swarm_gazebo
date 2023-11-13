@@ -21,7 +21,7 @@
         
         <!--goal send to the planner-->
         <remap from="/selected_goal" to="/move_base_simple/goal"/>
-        <param name="goal_threshold" value="0.5"/>  
-        <param name="orient_tolerance" value="0.5"/>
+        <param name="goal_threshold" value="0.3"/>  <!--0.5-->
+        <param name="orient_tolerance" value="1e-1"/> <!--0.5-->
     </node>
 </launch>

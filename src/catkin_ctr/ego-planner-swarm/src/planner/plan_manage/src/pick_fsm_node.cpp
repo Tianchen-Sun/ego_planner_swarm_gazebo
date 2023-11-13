@@ -7,6 +7,7 @@ PickFsmNode::PickFsmNode(const ros::NodeHandle & nh){
 
     nh_.param<double>("goal_threshold", goal_threshold_,0.5f);
     nh_.param<double>("orient_tolerance", orient_tolerance_, 1e-1f);
+    nh_.param<bool>("test_mode", test_, false);
     on_the_way_ = false;
     ROS_INFO("goal_threshold = %f", goal_threshold_);
     ROS_INFO("orient_tolerance = %f", orient_tolerance_);
@@ -30,13 +31,16 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
 
     // preset the state
     at_goal_pose_ = false;
+    at_goal_position_ = false;
     at_hover_pose_ = false;
     
     
 
     //TEMP
-    // detected_goal_.pose.position.z = 1.0;
-    
+    if (test_==true){
+        detected_goal_.pose.position.z = 1.0;
+    }
+
     // check whether the drone is at the goal pose
     if (sqrt(pow(odom_pos_(0)-detected_goal_.pose.position.x,2))+sqrt(pow(odom_pos_(1)-detected_goal_.pose.position.y,2))+sqrt(pow(odom_pos_(2)-detected_goal_.pose.position.z,2))<goal_threshold_)
     {   
@@ -65,7 +69,9 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     // check whether the drone is at the hover pose
 
     //TEMP
-    // odom_pos_(2) = hover_pose_.pose.position.z;
+    if (test_==true){
+        odom_pos_(2) = hover_pose_.pose.position.z;
+    }
     bool at_hover_position = false;
     if (sqrt(pow(odom_pos_(0)-hover_pose_.pose.position.x,2))+sqrt(pow(odom_pos_(1)-hover_pose_.pose.position.y,2))+sqrt(pow(odom_pos_(2)-hover_pose_.pose.position.z,2))<goal_threshold_)
     {    
@@ -73,7 +79,7 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
             at_hover_pose_ = true;
         }
         else{
-            at_hover_pose_ = true;
+            at_hover_pose_ = false;
         }
         at_hover_position =true;
     }
@@ -99,13 +105,13 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
          //Once goal detected, ignore the following detected goal, until current pick is finished
         detected_goal_sub_.shutdown();
         
-        ROS_INFO("detected_goal_sub_ is shutdown!");
+        // ROS_INFO("detected_goal_sub_ is shutdown!");
         goal_detected_ = false;
     }
-    else if (on_the_way_==true){
-        ROS_INFO("I am on the way!");
-        // publish_selected_goal();
-    }
+    // else if (on_the_way_==true){
+    //     ROS_INFO("I am on the way!");
+    //     // publish_selected_goal();
+    // }
     // return to the hover position
     else if (at_hover_pose_==true){
         on_the_way_ = false;
@@ -138,8 +144,13 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     }   
     else if (goal_detected_==false){
         on_the_way_ = false;
-        ROS_INFO("I have not found an apple, I will hover!");
-       
+        if (at_hover_pose_==false){
+            selected_goal_pub_.publish(hover_pose_);
+            ROS_INFO("I have not found an apple, I will return to hover pose!");
+        }
+        else if(at_hover_pose_==true){
+            ROS_INFO("I have not found an apple, I will hover!");
+        }
     }
     else{
         ROS_INFO("Waiting for goal detection!");
@@ -202,7 +213,7 @@ void PickFsmNode::set_hover_pose(){
 
     // for publishing
     hover_pose_.header.stamp = ros::Time::now();
-    hover_pose_.header.frame_id = "world";
+    hover_pose_.header.frame_id = "map";
 
     //TEMP
     hover_pose_.pose.position.x = 0.0;

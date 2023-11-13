@@ -53,11 +53,12 @@ private:
     bool goal_detected_; // whether the goal is detected
     bool at_goal_pose_; // whether the pick is finished
     bool at_goal_position_; // whether the drone is at the goal position
-
+    
     bool at_hover_pose_; // whether the drone is at the hover pose
     bool set_yolo_state_; // whether the yolo is running
     bool yolo_state_prev_; // whether the yolo state is published
-
+    bool test_; // whether the test mode is on
+    
     bool on_the_way_; // whether the drone is on the way to the goal pose
     std_msgs::Bool yolo_state_signal_; // yolo state signal
 

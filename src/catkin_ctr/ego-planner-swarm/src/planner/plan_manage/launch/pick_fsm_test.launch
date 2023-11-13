@@ -17,11 +17,12 @@
         <remap from="/odom" to="$(arg odom_topic)"/>
 
         <!--depth camera detection result send to the pick_fsm-->
-        <remap from="/detected_goal_pos" to="obj_position"/> <!--/move_base_simple/goal, obj_position-->
+        <remap from="/detected_goal_pos" to="/move_base_simple/goal"/> <!--/move_base_simple/goal, obj_position-->
         
         <!--goal send to the planner-->
         <remap from="/selected_goal" to="/move_base_simple/goal"/>
         <param name="goal_threshold" value="0.5"/>  
         <param name="orient_tolerance" value="0.5"/>
+        <param name="test_mode" value="true"/>
     </node>
 </launch>
