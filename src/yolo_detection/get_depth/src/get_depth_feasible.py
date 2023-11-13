@@ -57,58 +57,51 @@ class GetDepth:
 
 
                 # calculate actual position in world frame
-                zd = depth_data
+                zk = depth_data
                 fx = 376.0
                 fy = 376.0
                 cx = 376.0
                 cy = 240.0
 
-                xm = zd/fx*(self.pu - cx)
-                ym = zd/fy*(self.pv - cy)
+                xm = zk/fx*(self.pu - cx)
+                ym = zk/fy*(self.pv - cy)
 
                 # xk = -xm
                 # yk = zk
                 # zk = ym
-                xk = zd
+                xk = -zk
                 yk = -xm
                 zk = -ym
 
-                xb = xk + 0.12
+                xb = xk - 0.12
                 yb = yk
-                zb = zk + 0.015
+                zb = zk - 0.015
 
                 quat_list = [self.quat_1,self.quat_2,self.quat_3,self.quat_4]
                 Rm = R.from_quat(quat_list)     
                 # print("type_Rm:",type(Rm)) 
                 rotation_matrix = Rm.as_matrix()
-
-                o2b_position_list = [xb,yb,zb]
-                o2b_position_matrix = np.zeros((3,1))
+                position_list = [self.body_pos_x,self.body_pos_y, self.body_pos_z]
+                position_matrix = np.zeros((3,1))
                 for i in range(3):
-                    o2b_position_matrix[i] = o2b_position_list[i]
-
-                body_position_list = [self.body_pos_x,self.body_pos_y, self.body_pos_z]
-                body_position_matrix = np.zeros((3,1))
-                for i in range(3):
-                    body_position_matrix[i] = body_position_list[i]
-
-                p =  np.dot(rotation_matrix,o2b_position_matrix) + body_position_matrix
+                    position_matrix[i] = position_list[i]
+                p =  np.dot(rotation_matrix,position_matrix) + position_matrix
                 self.obj_x,self.obj_y,self.obj_z = p[0:3]
                 # print('self.obj_xyz:\n',self.obj_x,self.obj_y,self.obj_z,'\n')
 
                 # Generate obj position msg
                 obj_position_msg = PoseStamped()
-                obj_position_msg.pose.position.x = self.obj_x-0.2 # modified for not collide
+                obj_position_msg.pose.position.x = self.obj_x
                 obj_position_msg.pose.position.y = self.obj_y
                 obj_position_msg.pose.position.z = self.obj_z #!!!!!
                 obj_position_msg.pose.orientation.x = 0
                 obj_position_msg.pose.orientation.y = 0
                 obj_position_msg.pose.orientation.z = 0
-                obj_position_msg.pose.orientation.w = 1
+                obj_position_msg.pose.orientation.w = 0
 
                 # publish obj_position
                 self.pub_position.publish(obj_position_msg)
-                print('body position list:\n',body_position_list,'\n obj postion p:\n',p,'\n')
+                print('body position list:\n',position_list,'\n obj postion p:\n',p,'\n')
 
             # else:
             #     print("callback_depth funtion got no aim point!")
@@ -116,11 +109,11 @@ class GetDepth:
             print(e)
 
     def callback_center(self, data=Detection2DArray):
-        if len(data.detections) !=0: # modified for prevent error when onthing to detect
+        if len(data.detections) != 0:
             self.pu = data.detections[0].bbox.center.y # modified for image shape confuse
             self.pv = data.detections[0].bbox.center.x
             # print('self.pu ,pv', self.pu, self.pv) # for test
-            # print('get aim pixel')
+            print('get aim pixel')
             self.puv_refreshed = True
     
     def callback_odom(self,data = Odometry):

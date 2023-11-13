@@ -35,7 +35,7 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     
 
     //TEMP
-    detected_goal_.pose.position.z = 1.0;
+    // detected_goal_.pose.position.z = 1.0;
     
     // check whether the drone is at the goal pose
     if (sqrt(pow(odom_pos_(0)-detected_goal_.pose.position.x,2))+sqrt(pow(odom_pos_(1)-detected_goal_.pose.position.y,2))+sqrt(pow(odom_pos_(2)-detected_goal_.pose.position.z,2))<goal_threshold_)
@@ -57,13 +57,15 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     // ROS_INFO("odom_pos_(0) = %f", odom_pos_(0));
     // ROS_INFO("odom_pos_(1) = %f", odom_pos_(1));
     // ROS_INFO("odom_pos_(2) = %f", odom_pos_(2));
-    ROS_INFO("state_check_callback: at_goal_position_ = %d", at_goal_position_);
-    ROS_INFO("state_check_callback: at_goal_pose = %d", at_goal_pose_);
+    // ROS_INFO("state_check_callback: at_goal_position_ = %d", at_goal_position_);
+    // ROS_INFO("state_check_callback: at_goal_pose = %d", at_goal_pose_);
 
 
     
     // check whether the drone is at the hover pose
-    odom_pos_(2) = hover_pose_.pose.position.z;
+
+    //TEMP
+    // odom_pos_(2) = hover_pose_.pose.position.z;
     bool at_hover_position = false;
     if (sqrt(pow(odom_pos_(0)-hover_pose_.pose.position.x,2))+sqrt(pow(odom_pos_(1)-hover_pose_.pose.position.y,2))+sqrt(pow(odom_pos_(2)-hover_pose_.pose.position.z,2))<goal_threshold_)
     {    
@@ -78,8 +80,8 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     else{
         at_hover_pose_ = false;
     }
-    ROS_INFO("state_check_callback: at_hover_position = %d", at_hover_position);
-    ROS_INFO("state_check_callback: at_hover_pose = %d", at_hover_pose_);
+    // ROS_INFO("state_check_callback: at_hover_position = %d", at_hover_position);
+    // ROS_INFO("state_check_callback: at_hover_pose = %d", at_hover_pose_);
 
 
     //--------- state change ---------
