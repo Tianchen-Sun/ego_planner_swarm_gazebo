@@ -230,7 +230,7 @@ void waypointCallback(const geometry_msgs::PoseArray& wp) {
   waypoints.clear();
 
   // estimated speed and time for every step
-  double speed = 2.5, step_time = 0.5;
+  double speed = 1.5, step_time = 0.5; //2.5
 
   // read all waypoints from PRM graph
   for (int k = 0; k < (int)wp.poses.size(); k++) {
@@ -486,7 +486,7 @@ int main(int argc, char** argv) {
   if (nh.getParam("speed", speed)) {
     ROS_INFO("[TrajOpt] get speed: %f", speed);
   } else {
-    speed = 2.0;
+    speed = 0.5;
     ROS_INFO("[TrajOpt] use default speed: %f", speed);
   }
 

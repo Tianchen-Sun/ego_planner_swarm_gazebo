@@ -100,7 +100,7 @@
 
   
   <node pkg="traj_opt" type="traj_opt_node" name="traj_opt_node" output="screen">
-      <param name="speed" value="1.0"/>
+      <param name="speed" value="0.1"/>
       <remap from="~waypoint" to="/prm_planner/raw_path"/>
       <remap from="~map" to="/prm_planner/occupancy_inflate" />
       <remap from="/grid_map/x_size" to="/random_forest/map/x_size" />

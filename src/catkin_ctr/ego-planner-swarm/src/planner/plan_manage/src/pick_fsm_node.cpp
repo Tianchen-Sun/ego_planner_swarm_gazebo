@@ -145,6 +145,7 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     else if (goal_detected_==false){
         on_the_way_ = false;
         if (at_hover_pose_==false){
+            ros::Duration(5.0).sleep();
             selected_goal_pub_.publish(hover_pose_);
             ROS_INFO("I have not found an apple, I will return to hover pose!");
         }
@@ -217,6 +218,10 @@ void PickFsmNode::set_hover_pose(){
 
     //TEMP
     hover_pose_.pose.position.x = 0.0;
+
+    if (test_==true){
+        hover_pose_.pose.position.x = 10.0;
+    }
     hover_pose_.pose.position.y = 0.0;
     hover_pose_.pose.position.z = 2.0;
     hover_pose_.pose.orientation.x = 0.0;
