@@ -21,7 +21,8 @@ public:
     void state_check_callback(const ros::TimerEvent& event);
     void publish_selected_goal();
     void set_hover_pose();
-    void ask_user_input();
+    void ask_user_yolo_input();
+    void ask_user_execute_input();
     void publish_yolo_state_signal();
     static char getch();
    
@@ -58,6 +59,7 @@ private:
     bool set_yolo_state_; // whether the yolo is running
     bool yolo_state_prev_; // whether the yolo state is published
     bool test_; // whether the test mode is on
+    bool execute_flag_; 
     
     bool on_the_way_; // whether the drone is on the way to the goal pose
     std_msgs::Bool yolo_state_signal_; // yolo state signal

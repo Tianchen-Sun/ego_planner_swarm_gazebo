@@ -99,13 +99,16 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     * at_goal_pose_
     */
     if (goal_detected_==true && at_goal_pose_==false){
+        execute_flag_=false;
+        ask_user_execute_input();
+        if (execute_flag_){
         publish_selected_goal();
         ROS_INFO("I have found an apple, I will go there! Selected goal published!");
 
          //Once goal detected, ignore the following detected goal, until current pick is finished
         detected_goal_sub_.shutdown();
-        
-        // ROS_INFO("detected_goal_sub_ is shutdown!");
+        }
+
         goal_detected_ = false;
     }
     // else if (on_the_way_==true){
@@ -116,7 +119,7 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     else if (at_hover_pose_==true){
         on_the_way_ = false;
         ROS_INFO("I am hovering!");
-        ask_user_input(); //will set set_yolo_state_
+        ask_user_yolo_input(); //will set set_yolo_state_
 
         if (set_yolo_state_==true){
 
@@ -218,11 +221,12 @@ void PickFsmNode::set_hover_pose(){
 
     //TEMP
     hover_pose_.pose.position.x = 0.0;
-
-    if (test_==true){
-        hover_pose_.pose.position.x = 10.0;
-    }
     hover_pose_.pose.position.y = 0.0;
+    if (test_==true){
+        hover_pose_.pose.position.x = 9.0;
+        hover_pose_.pose.position.y = 2.0;
+    }
+    
     hover_pose_.pose.position.z = 2.0;
     hover_pose_.pose.orientation.x = 0.0;
     hover_pose_.pose.orientation.y = 0.0;
@@ -249,7 +253,7 @@ char PickFsmNode::getch()
     return ch;
 }
 
-void PickFsmNode::ask_user_input(){
+void PickFsmNode::ask_user_yolo_input(){
     std::cout<<"Do you want to run yolo? (y/n)"<<std::endl;
     char user_key=getch();
 
@@ -259,6 +263,27 @@ void PickFsmNode::ask_user_input(){
             break;
         case 'n':
             set_yolo_state_= false;
+            break;
+        default:
+            break;
+    
+    }
+
+}
+void PickFsmNode::ask_user_execute_input(){
+
+    std::cout << "I have found apple at " << detected_goal_.pose.position.x
+          << "," << detected_goal_.pose.position.y
+          << "," << detected_goal_.pose.position.z
+          << ". Do you want me to go there? (y/n)" << std::endl;
+    char user_key=getch();
+
+    switch(user_key){
+        case 'y':
+            execute_flag_ = true;
+            break;
+        case 'n':
+            execute_flag_= false;
             break;
         default:
             break;
