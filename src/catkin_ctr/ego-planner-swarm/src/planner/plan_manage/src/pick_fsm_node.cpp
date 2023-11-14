@@ -72,7 +72,7 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     if (test_==true){
         odom_pos_(2) = hover_pose_.pose.position.z;
     }
-    bool at_hover_position = false;
+    at_hover_position_ = false;
     if (sqrt(pow(odom_pos_(0)-hover_pose_.pose.position.x,2))+sqrt(pow(odom_pos_(1)-hover_pose_.pose.position.y,2))+sqrt(pow(odom_pos_(2)-hover_pose_.pose.position.z,2))<goal_threshold_)
     {    
         if (odom_orient_.isApprox(hover_orient_, orient_tolerance_)){
@@ -81,7 +81,7 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
         else{
             at_hover_pose_ = false;
         }
-        at_hover_position =true;
+        at_hover_position_ =true;
     }
     else{
         at_hover_pose_ = false;
@@ -90,7 +90,13 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     // ROS_INFO("state_check_callback: at_hover_pose = %d", at_hover_pose_);
 
 
-    //--------- state change ---------
+
+
+}
+
+void PickFsmNode::state_transition()
+{ 
+    //--------- state transition ---------
     // publish the current goal
 
     /*
@@ -98,34 +104,23 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
     * on_the_way_
     * at_goal_pose_
     */
-    if (goal_detected_==true && at_goal_pose_==false){
-        execute_flag_=false;
-        ask_user_execute_input();
-        if (execute_flag_){
-        publish_selected_goal();
-        ROS_INFO("I have found an apple, I will go there! Selected goal published!");
 
-         //Once goal detected, ignore the following detected goal, until current pick is finished
-        detected_goal_sub_.shutdown();
-        }
+   // TEMP：
+   // at_hover_pose_ = true;
 
-        goal_detected_ = false;
-    }
-    // else if (on_the_way_==true){
-    //     ROS_INFO("I am on the way!");
-    //     // publish_selected_goal();
-    // }
-    // return to the hover position
-    else if (at_hover_pose_==true){
+    if (at_hover_position_==true){
         on_the_way_ = false;
         ROS_INFO("I am hovering!");
-        ask_user_yolo_input(); //will set set_yolo_state_
+
+        //TEMP
+        // ask_user_yolo_input(); //will set set_yolo_state_
+        set_yolo_state_ =true;
 
         if (set_yolo_state_==true){
 
             // publish the yolo signal to start yolo
             // will publish the yolo signal in the end of the callback function
-            ROS_INFO("yolo_signal_ is published!");
+            ROS_INFO("start yolo signal is published!");
 
             // subscribe the detected goal
             detected_goal_sub_ = nh_.subscribe("/detected_goal_pos", 1, &PickFsmNode::detected_goal_callback, this);
@@ -137,6 +132,29 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
             ROS_INFO("yolo is not running!");
         }
     }
+    else if (goal_detected_==true && at_goal_pose_==false){
+        execute_flag_=false;
+        ask_user_execute_input();
+        
+        if (execute_flag_)
+        {
+            publish_selected_goal();
+            ROS_INFO("I have found an apple, I will go there! Selected goal published!");
+
+            //Once goal detected, ignore the following detected goal, until current pick is finished
+            detected_goal_sub_.shutdown();
+        }
+        else{
+            ROS_INFO("Alright, I will not go there!");
+        }
+        goal_detected_ = false;
+    }
+    // else if (on_the_way_==true){
+    //     ROS_INFO("I am on the way!");
+    //     // publish_selected_goal();
+    // }
+    // return to the hover position
+    
     else if (at_goal_position_==true){
         on_the_way_ = false;
         ROS_INFO("Pick finished!, I will return to hover pose in 5s later and listening targets!");
@@ -166,9 +184,9 @@ void PickFsmNode::state_check_callback(const ros::TimerEvent& event){
         publish_yolo_state_signal();
         yolo_state_prev_ = set_yolo_state_;
     }
-
 }
 
+// get the odometry state
 void PickFsmNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg){
     odom_pose_.header = msg->header;
     odom_pose_.pose.pose.position.x = msg->pose.pose.position.x;
@@ -240,22 +258,21 @@ void PickFsmNode::set_hover_pose(){
     hover_orient_.w() = hover_pose_.pose.orientation.w;
 }
 
-char PickFsmNode::getch() 
-{
-    struct termios oldt, newt;
-    char ch;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    return ch;
-}
+// char PickFsmNode::getch() 
+// {
+//     struct termios oldt, newt;
+//     char ch;
+//     tcgetattr(STDIN_FILENO, &oldt);
+//     newt = oldt;
+//     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+//     ch = getchar();
+//     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+//     return ch;
+// }
 
 void PickFsmNode::ask_user_yolo_input(){
     std::cout<<"Do you want to run yolo? (y/n)"<<std::endl;
-    char user_key=getch();
+    char user_key=getchar();
 
     switch(user_key){
         case 'y':
@@ -272,11 +289,11 @@ void PickFsmNode::ask_user_yolo_input(){
 }
 void PickFsmNode::ask_user_execute_input(){
 
-    std::cout << "I have found apple at " << detected_goal_.pose.position.x
+    std::cout << "I have found apple at [" << detected_goal_.pose.position.x
           << "," << detected_goal_.pose.position.y
           << "," << detected_goal_.pose.position.z
-          << ". Do you want me to go there? (y/n)" << std::endl;
-    char user_key=getch();
+          << "]. Do you want me to go there? (y/n)" << std::endl;
+    char user_key=getchar();
 
     switch(user_key){
         case 'y':
@@ -302,11 +319,13 @@ int main(int argc, char **argv)
 
   ros::init(argc, argv, "pick_fsm_node");
   ros::NodeHandle nh("~");
-
-  
   PickFsmNode pick_fsm_node(nh);
 
-  ros::spin();
 
+  while (ros::ok()) {
+    pick_fsm_node.state_transition();
+    ros::spinOnce();
+    ros::Duration(1).sleep();
+  }
   return 0;
 }

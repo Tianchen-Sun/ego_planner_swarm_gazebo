@@ -19,12 +19,14 @@ public:
     void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
     void detected_goal_callback(const geometry_msgs::PoseStamped::ConstPtr& msg);
     void state_check_callback(const ros::TimerEvent& event);
+    void state_transition();
+
     void publish_selected_goal();
     void set_hover_pose();
     void ask_user_yolo_input();
     void ask_user_execute_input();
     void publish_yolo_state_signal();
-    static char getch();
+    // static char getch();
    
 
 private:
@@ -49,6 +51,13 @@ private:
     nav_msgs::Odometry odom_pose_; // odometry pose
     geometry_msgs::PoseStamped detected_goal_; // detected goal pose
     geometry_msgs::PoseStamped selected_goal_; // selected goal pose
+    
+    // set constant Hover position for apple detection
+    geometry_msgs::PoseStamped hover_pose_; 
+
+    // yolo state signal
+    std_msgs::Bool yolo_state_signal_; 
+
 
     // fsm variables
     bool goal_detected_; // whether the goal is detected
@@ -56,17 +65,16 @@ private:
     bool at_goal_position_; // whether the drone is at the goal position
     
     bool at_hover_pose_; // whether the drone is at the hover pose
+    //TEMP
+    bool at_hover_position_; // whether the drone is at the hover position 
+
     bool set_yolo_state_; // whether the yolo is running
     bool yolo_state_prev_; // whether the yolo state is published
     bool test_; // whether the test mode is on
     bool execute_flag_; 
     
     bool on_the_way_; // whether the drone is on the way to the goal pose
-    std_msgs::Bool yolo_state_signal_; // yolo state signal
-
-    // set constant Hover position for apple detection
-    geometry_msgs::PoseStamped hover_pose_; 
-
+    
     // set constant
     double goal_threshold_;
     double orient_tolerance_ = 1e-6;

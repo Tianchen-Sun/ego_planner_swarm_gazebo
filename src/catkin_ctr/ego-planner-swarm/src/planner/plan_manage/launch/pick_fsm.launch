@@ -7,10 +7,10 @@
 
 
     <include file="$(find yolov7_ros)/launch/yolov7.launch"></include>
-    <node pkg="dispimg" name="img_process_node" type="img_disp.py"></node> -->
+    <node pkg="dispimg" name="img_process_node" type="img_disp.py"></node> 
     
     <!--depth camera module's get_depth start-->
-    <node pkg="get_depth" name="get_depth_node" type="get_depth.py" output="screen"></node>
+    <node pkg="get_depth" name="get_depth_node" type="get_depth.py"></node> <!-- output="screen"-->
 
     <!-- pick fsm node start-->
     <node pkg="ego_planner" name="pick_fsm_node" type ="pick_fsm_node" output="screen">
@@ -22,7 +22,7 @@
         <!--goal send to the planner-->
         <remap from="/selected_goal" to="/move_base_simple/goal"/>
         <param name="goal_threshold" value="0.3"/>  <!--0.5-->
-        <param name="orient_tolerance" value="1e-1"/> <!--0.5-->
+        <param name="orient_tolerance" value="5e-1"/> <!--0.5-->
         <param name="test_mode" value="false"/>
     </node>
 </launch>
