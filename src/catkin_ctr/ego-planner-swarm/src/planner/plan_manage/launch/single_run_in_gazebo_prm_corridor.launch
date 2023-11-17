@@ -5,10 +5,11 @@
 
     <arg name="map_size_x" value="50.0"/>
     <arg name="map_size_y" value="25.0"/>
-    <arg name="map_size_z" value="3.0"/>
+    <arg name="map_size_z" value="6.0"/> <!--need to *2 since want to not modify prm param-->
     <arg name="target_x" default="12"/>
     <arg name="target_y" default="1"/>
     <arg name="target_z" default="1.5"/>
+    <arg name="simple_goal_z" value="  2.0"/>
     <arg name="odom_topic" value="mavros/local_position/odom"/>
     <arg name="depth_topic" value="/iris_D435i/realsense/depth_camera/depth/image_raw"/>
     <arg name="cmd_topic" value="planning/pos_cmd"/>
@@ -73,7 +74,7 @@
         <param name="traj_server/time_forward" value="1.0" type="double"/>
     </node>
     
-    <arg name="number_sample" value="1000"/>
+    <arg name="number_sample" value="500"/>
 
     <node name="prm_planner" pkg="planner" type="planner_node" output="screen" >
       <param name="number_sample" value="$(arg number_sample)" />
@@ -82,12 +83,12 @@
       <!-- <remap from="/grid_map/x_size" to="/random_forest/map/x_size" />
       <remap from="/grid_map/y_size" to="/random_forest/map/y_size" />
       <remap from="/grid_map/z_size" to="/random_forest/map/z_size" /> -->
-      
+      <param name="simple_goal_z" value="$(arg simple_goal_z)"/>
       <param name="x_size" value="$(arg map_size_x)"/>
       <param name="y_size" value="$(arg map_size_y)"/>
       <param name="z_size" value="$(arg map_size_z)"/>
-      <param name="resolution" value="0.5" /><!--0.05-->
-      <param name="obstacle_inflation" value="0.2" />
+      <param name="/grid_map/resolution" value="0.15" /><!--0.05--> <!--_mp_resolution-->
+      <param name="obstacle_inflation" value="0.3" />
     </node> 
 
   

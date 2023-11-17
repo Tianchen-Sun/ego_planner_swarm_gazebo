@@ -494,18 +494,30 @@ PRM::PRM(const ros::NodeHandle & nh) {
 
     grid_map_ptr_.reset(new GridMap);
     grid_map_ptr_->initGridMap(nh_);
+    odom_sub_ = nh_.subscribe("odometry", 5, &PRM::OdomCallback, this);
+    goal_sub_ = nh_.subscribe("/move_base_simple/goal", 5, &PRM::LoadGoalCallback, this);
+    // call node generation
     pnt_cld_sub_ = nh_.subscribe<sensor_msgs::PointCloud2>(
       "cloud_in", 1, &PRM::pointCloudCallback, this);
     sub_ = nh_.subscribe("/move_base_simple/goal", 5, &PRM::callback, this);
-    odom_sub_ = nh_.subscribe("odometry", 5, &PRM::OdomCallback, this);
+    
+    
+
     edge_pub_ = nh_.advertise<visualization_msgs::Marker>("edge_marker", 10);
     path_pub_ = nh_.advertise<visualization_msgs::Marker>("path_marker", 10);
     node_pub_ = nh_.advertise<visualization_msgs::Marker>("node_markers", 10);
     path_raw_pub_ = nh_.advertise<geometry_msgs::PoseArray>("raw_path", 10);
     get_map_param();
     k = 250; // Set k
+    
 }
-
+void PRM::LoadGoalCallback(const geometry_msgs::PoseStamped::ConstPtr& msg){
+    end_pos_=Eigen::Vector3d(msg->pose.position.x, msg->pose.position.y, simple_goal_z);
+    ROS_INFO("goal received, x: %f, y: %f, z: %f", end_pos_(0), end_pos_(1), end_pos_(2));
+    node_generation();
+    edge_generation();
+    ROS_INFO("PRM SAMPLING FINIHED");
+}
 void PRM::clear(){
     graph_.clear_graph();
 }
@@ -527,6 +539,10 @@ void PRM::get_map_param() {
   if (nh_.getParam("/prm_planner/number_sample", n_sample)) {
     ROS_INFO("get sample number: %i", n_sample);
   }
+  if (nh_.getParam("simple_goal_z", simple_goal_z)) {
+    ROS_INFO("simple_goal_z: %f",simple_goal_z);
+  }
+  
 }
 
 /**
@@ -535,12 +551,40 @@ void PRM::get_map_param() {
  */
 void PRM::node_generation() {
     // generate random node
-    Vertice v0(0,0,0);
+    // Vertice v0(0,0,0);
+    // graph_.insertVex(v0);
+    // for (int i = 0; i < n_sample; i++) {
+    //     double x,y,z;
+    //     x = ((double)rand() / (RAND_MAX)-0.5) * map_size_x;
+    //     y = ((double)rand() / (RAND_MAX)-0.5) * map_size_y;
+    //     z = ((double)rand() / (RAND_MAX)) * map_size_z * 0.5;
+    //     Vertice v(x,y,z);
+    //     if(collision_check(v)) {
+    //         graph_.insertVex(v);
+    //         // std::cout << "this sample is not collision free" << std::endl;
+    //     }
+    // }
+
+    // tree_.build(graph_.get_vexList()); //KDTree    
+
+    // generate node w.r.t local frame
+    clear();
+    Vertice v0(current_pos_(0),current_pos_(1),current_pos_(2));
     graph_.insertVex(v0);
+
+    double local_sample_size=map_size_y*0.5;
+    ROS_INFO_STREAM("current_pos_:"<<current_pos_(0)<<","<<current_pos_(1)<<","<<current_pos_(2));
+    ROS_INFO_STREAM("end_pos_:"<<end_pos_(0)<<","<<end_pos_(1)<<","<<end_pos_(2));
+    double sample_center_x = (end_pos_(0)+current_pos_(0))/2;
+    double sample_center_y = (end_pos_(1)+current_pos_(1))/2;
+    double sample_range_x=abs(end_pos_(0)-current_pos_(0))*1.2;
+    double sample_range_y=abs(end_pos_(1)-current_pos_(1))*1.2;
+    ROS_INFO_STREAM("sample_center_:"<<sample_center_x<<","<<sample_center_y);
+// under global frame
     for (int i = 0; i < n_sample; i++) {
         double x,y,z;
-        x = ((double)rand() / (RAND_MAX)-0.5) * map_size_x;
-        y = ((double)rand() / (RAND_MAX)-0.5) * map_size_y;
+        x = ((double)rand() / (RAND_MAX)-0.5) * sample_range_x+sample_center_x;
+        y = ((double)rand() / (RAND_MAX)-0.5) * sample_range_y+sample_center_y;
         z = ((double)rand() / (RAND_MAX)) * map_size_z * 0.5;
         Vertice v(x,y,z);
         if(collision_check(v)) {
@@ -549,7 +593,7 @@ void PRM::node_generation() {
         }
     }
 
-    tree_.build(graph_.get_vexList()); //KDTree    
+    tree_.build(graph_.get_vexList()); //KDTree 
 }
 
 /**
@@ -739,7 +783,8 @@ void PRM::callback(const geometry_msgs::PoseStamped::ConstPtr& msg) {
     ROS_INFO("position received: %f, %f, %f",current_pos_(0),current_pos_(1),current_pos_(2));
 
     //Add goal as a node into the graph
-    Vertice end(msg->pose.position.x,msg->pose.position.y,2);
+    Vertice end(msg->pose.position.x,msg->pose.position.y,simple_goal_z);
+    
     //If target is valid, run graph search
     if(collision_check(end)){
 
@@ -808,9 +853,7 @@ void PRM::callback(const geometry_msgs::PoseStamped::ConstPtr& msg) {
 
 void PRM::pointCloudCallback(const sensor_msgs::PointCloud2::ConstPtr& msg) {
     grid_map_ptr_->pointCloudCallback(msg);
-    node_generation();
-    edge_generation();
-    ROS_INFO("PRM SAMPLING FINIHED");
+    
 }
 
 void PRM::OdomCallback(const nav_msgs::Odometry::ConstPtr& msg) {

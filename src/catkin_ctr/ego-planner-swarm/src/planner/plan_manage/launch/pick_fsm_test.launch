@@ -1,0 +1,28 @@
+<launch>
+    <arg name="simple_simulation" default="true" />
+    <arg name="odom_topic" value="/drone_visual_slam/odom"/> <!--mavros/local_position/odom,/drone_visual_slam/odom-->
+
+    <!--depth camera module's aim px start-->
+    <!-- <node pkg="aim_px" name="aim_px_node" type="aim_px.py" ></node> output="screen" -->
+
+
+    <!-- <include file="$(find yolov7_ros)/launch/yolov7.launch"></include>
+    <node pkg="dispimg" name="img_process_node" type="img_disp.py"></node> -->
+    <!--depth camera module's get_depth start-->
+
+    <!-- <node pkg="get_depth" name="get_depth_node" type="get_depth.py" output="screen"></node> -->
+
+    <!-- pick fsm node start-->
+    <node pkg="ego_planner" name="pick_fsm_node" type ="pick_fsm_node" output="screen">
+        <remap from="/odom" to="$(arg odom_topic)"/>
+
+        <!--depth camera detection result send to the pick_fsm-->
+        <remap from="/detected_goal_pos" to="/move_base_simple/goal"/> <!--/move_base_simple/goal, obj_position-->
+        
+        <!--goal send to the planner-->
+        <remap from="/selected_goal" to="/move_base_simple/goal"/>
+        <param name="goal_threshold" value="0.5"/>  
+        <param name="orient_tolerance" value="0.5"/>
+        <param name="test_mode" value="true"/>
+    </node>
+</launch>

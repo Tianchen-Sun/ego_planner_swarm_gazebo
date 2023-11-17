@@ -38,6 +38,12 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
+add_executable(pick_fsm_node
+  src/pick_fsm_node.cpp
+  )
+target_link_libraries(pick_fsm_node
+ ${catkin_LIBRARIES}
+ )
 
 add_executable(ego_planner_node
   src/ego_planner_node.cpp 

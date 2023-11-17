@@ -40,7 +40,7 @@
         <arg name="fy" value="376.0"/>
         <!-- maximum velocity and acceleration the drone will reach -->
         <arg name="max_vel" value="1.0" />
-        <arg name="max_acc" value="3.0" />
+        <arg name="max_acc" value="1.0" /><!--3.0-->
         <!--always set to 1.5 times grater than sensing horizen-->
         <arg name="planning_horizon" value="7.5" />
         <arg name="use_distinctive_trajs" value="true" />
@@ -84,5 +84,8 @@
         <param name="tf45" value="false"/>
         <param name="drone_id" value="drone_id"/>
     </node>
-
+    <!-- <node pkg="ego_planner" name="pick_fsm_node" type ="pick_fsm_node" output="screen">
+        <remap from="/odom" to="$(arg odom_topic)"/>
+        <remap from="/detected_goal_pos" to="/move_base_simple/goal"/>
+    </node> -->
 </launch>

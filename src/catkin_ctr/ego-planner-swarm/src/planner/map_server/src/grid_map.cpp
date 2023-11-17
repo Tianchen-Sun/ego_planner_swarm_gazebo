@@ -13,7 +13,7 @@
 
 void GridMap::initGridMap(ros::NodeHandle& nh) {
   /* read parameters */
-  nh.param("/grid_map/resolution", _mp_resolution, 0.05f);
+  nh.param("/grid_map/resolution", _mp_resolution, 0.15f);
   nh.param("/grid_map/frame_id", _mp_frame_id, std::string("world"));
   nh.param("/grid_map/obstacle_inflation", _mp_inflation, 0.2f);
 
@@ -26,7 +26,7 @@ void GridMap::initGridMap(ros::NodeHandle& nh) {
   nh.param("/grid_map/x_size", _mp_size_x, 50.0f); //26.0f
   nh.param("/grid_map/y_size", _mp_size_y, 25.0f); //20.0f
   nh.param("/grid_map/z_size", _mp_size_z, 3.0f);  //3.0f
-
+  
   ROS_INFO("Initializing GridMap Parameters:");
   ROS_INFO_STREAM("resolution:\t" << _mp_resolution);
   ROS_INFO_STREAM("obstacle_inflation:\t" << _mp_inflation);
@@ -66,7 +66,7 @@ void GridMap::initGridMap(ros::NodeHandle& nh) {
 void GridMap::pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& cld) {
   pcl::PointCloud<pcl::PointXYZ> cloud;
   pcl::fromROSMsg(*cld, cloud);
-  ROS_INFO("Received points clouds");
+  // ROS_INFO("Received points clouds");
 
   int cloud_size = cloud.points.size();
   ROS_ERROR_COND(cloud_size == 0, "No points in this point cloud.");
@@ -139,7 +139,7 @@ void GridMap::publish() {
       }
     }
   }
-  ROS_INFO_STREAM("publish size " << cloud.points.size());
+  // ROS_INFO_STREAM("publish size " << cloud.points.size());
   cloud.width = cloud.points.size();
   cloud.height = 1;
   cloud.is_dense = true;
@@ -147,7 +147,7 @@ void GridMap::publish() {
   sensor_msgs::PointCloud2 cloud_msgs;
   pcl::toROSMsg(cloud, cloud_msgs);
   map_pub_.publish(cloud_msgs);
-  ROS_INFO("GridMap publish complete");
+  // ROS_INFO("GridMap publish complete");
   is_map_built_ = true;
 }
 
@@ -423,11 +423,11 @@ float GridMap::getResolution() { return _mp_resolution; }
 void GridMap::initFromPointCloud(const sensor_msgs::PointCloud2ConstPtr &cld) {
   pcl::PointCloud<pcl::PointXYZ> cloud;
   pcl::fromROSMsg(*cld, cloud);
-  ROS_INFO("Init Map from published occupancy maps");
+  // ROS_INFO("Init Map from published occupancy maps");
 
   for (auto it = cloud.begin(); it != cloud.end(); ++it) {
     Eigen::Vector3f p = it->getVector3fMap();
     occupancy_buffer_[posToAddress(p)] = true;
   }
-  ROS_INFO("Initialization Finished");
+  // ROS_INFO("Initialization Finished");
 }

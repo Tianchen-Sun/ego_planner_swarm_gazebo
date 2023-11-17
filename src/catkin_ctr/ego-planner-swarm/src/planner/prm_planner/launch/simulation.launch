@@ -11,7 +11,7 @@
   <arg name="init_z" value="  1.0"/>
   <arg name="number_sample" value="1000"/>
   <arg name="odom_topic" value="visual_slam/odom" />
-  
+  <arg name="simple_goal_z" value="  1.0"/>
   <!-- map -->
   <node pkg ="map_generator" name ="random_forest" type ="random_forest" output = "screen">
       <param name="map/x_size" value="$(arg map_size_x)" />
@@ -91,15 +91,16 @@
       <param name="x_size" value="$(arg map_size_x)"/>
       <param name="y_size" value="$(arg map_size_y)"/>
       <param name="z_size" value="$(arg map_size_z)"/>
+      <param name="simple_goal_z" value="$(arg simple_goal_z)"/>
       <remap from="~cloud_in" to="/map_generator/global_cloud" />
       <remap from="~odometry" to="/drone_visual_slam/odom" />
-      <param name="resolution" value="0.05" />
+      <param name="resolution" value="0.15" />
       <param name="obstacle_inflation" value="0.2" />
   </node>
 
   
   <node pkg="traj_opt" type="traj_opt_node" name="traj_opt_node" output="screen">
-      <param name="speed" value="1.0"/>
+      <param name="speed" value="0.1"/>
       <remap from="~waypoint" to="/prm_planner/raw_path"/>
       <remap from="~map" to="/prm_planner/occupancy_inflate" />
       <remap from="/grid_map/x_size" to="/random_forest/map/x_size" />
